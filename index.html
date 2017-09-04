@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>slide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+  <script>(function(d,c,b){var e=d.documentElement,a="orientationchange" in c?"orientationchange":"resize";var b=b||750;recalc=function(){var f=e.clientWidth;if(!f){return}e.style.fontSize=100*(f/b)+"px"};if(!d.addEventListener){return}recalc();c.addEventListener(a,recalc,false);d.addEventListener("DOMContentLoaded",recalc,false)})(document,window,750);</script>
+  <style>
+  *{margin: 0; padding: 0;}
+  .slide{overflow: hidden; position: relative;}
+  .total{width: 10000px; font-size: 0;}
+  .total.auto{transition: all 0.5s ease-out;}
+  .total.manual{transition: all 0.1s ease-out;}
+  .total>a{}
+  .total>a>img{ width: 7.5rem;}
+  .dot{position: absolute; font-size: 0; bottom: 10px; left: 50%; transform: translateX(-50%); }
+  .dot>b{width: 10px; height: 10px; border-radius: 50%; background-color: white; margin: 0 5px; display: inline-block;}
+  .dot>b.in{background-color: red;}
+  </style>
+</head>
+<body>
+  <div class="slide" id="slide">
+    <div class="total" id="total">
+      <a href="img/1.jpg"><img src="img/1.jpg"></a>
+      <a href="img/2.jpg"><img src="img/2.jpg"></a>
+      <a href="img/3.jpg"><img src="img/3.jpg"></a>
+    </div>
+    <div class="dot" id="dot"><b class="in"></b><b></b><b></b></div>
+  </div>
+  <div class="text">
+    <p>a</p>
+    <p>a</p>
+    <p>a</p>
+    <p>a</p>
+    <p>a</p>
+    <p>a</p>
+    <p>a</p>
+    <p>a</p>
+    <p>a</p>
+  </div>
+</body>
+<script src="js/jquery-3.2.1.min.js"></script>
+<script>
+$(function() {
+  $('#total').append($('#total>a:first').clone());
+  var $slide = $('#slide'),
+      $total = $('#total'),
+      eachWidth = $('#total>a:first>img').width();
+      index = 0,
+      lastIndex = $('#total>a:last').index(),
+      slideY = false,
+      slideX = false,
+      start = {x: 0, y: 0},
+      move = {x: 0, y: 0},
+      curDistance = 0;
+      ;
+  $slide
+    .on('touchstart', function(e) {
+      slideY = false;
+      slideX = false;
+      start.x = e.originalEvent.targetTouches[0].clientX;
+      start.y = e.originalEvent.targetTouches[0].clientY;
+      if ($total.hasClass('auto')) slideY = true;
+    }).on('touchmove', function(e) {
+      if (slideY) return;
+      move.x = e.originalEvent.targetTouches[0].clientX;
+      move.y = e.originalEvent.targetTouches[0].clientY;
+      var x = Math.abs(move.x - start.x);
+      var y = Math.abs(move.y - start.y);
+      // 判断用户是横向滚动还是纵向滚动
+      if (!slideX && !slideY) {
+        if (x > 10 || y > 10) {
+          x/y > 1 ? slideX = true : slideY = true; 
+          if (slideY) return;
+        }
+      }
+      if (slideX) {
+        clearTimeout(window.autoSTOId);
+        e.preventDefault();
+        var distance = move.x - start.x;
+        $total.css('transform', 'translateX(' + (curDistance + distance) + 'px)');
+      }
+    }).on('touchend', function(e) {
+      if (slideX) {
+        var distance = e.originalEvent.changedTouches[0].clientX - start.x;
+        // 滑动距离超过 1/3 ，则滑动成功，不超过则恢复位置
+        if (Math.abs(distance) > eachWidth / 3) {
+          // 向右滑且不是第一页
+          if (distance > 0 && curDistance < 0) {
+            curDistance += eachWidth;
+          }
+          // 向左滑
+          if (distance < 0) {
+            curDistance -= eachWidth;
+          }
+        }
+        $total.addClass('manual').css('transform', 'translateX(' + curDistance + 'px)');
+      }
+    });
+    
+  function fullSlide() {
+    curDistance -= eachWidth;
+    $total.addClass('auto').css('transform', 'translateX(' + curDistance + 'px)');
+  }
+  window.autoSTOId = setTimeout(function() {
+    fullSlide();
+  }, 4000);
+  $total.on('webkitTransitionEnd', function(){
+    $total.removeClass('auto manual');
+    if (curDistance <= ((lastIndex - index) * (-eachWidth))) {
+      curDistance = 0;
+      $total.css('transform', 'translateX(' + curDistance + 'px)');
+    }
+    $('#dot>b').removeClass('in').eq(Math.ceil(-curDistance/eachWidth)).addClass('in');
+    window.autoSTOId = setTimeout(function() {
+      fullSlide();
+    }, 4000);
+  })
+});
+</script>
+</html>
