@@ -59,7 +59,7 @@ $(function() {
       slideX = false,
       start = {x: 0, y: 0},
       move = {x: 0, y: 0},
-      curDistance = $total.css('transform').split(',')[4];
+      currentX = $total.css('transform').split(',')[4];
       
   $slide
     .on('touchstart', function(e) {
@@ -74,8 +74,8 @@ $(function() {
       move.y = e.originalEvent.targetTouches[0].clientY;
       var x = Math.abs(move.x - start.x);
       var y = Math.abs(move.y - start.y);
-      // 判断用户是横向滚动还是纵向滚动
       if (!slideX && !slideY) {
+        // 判断用户是横向滚动还是纵向滚动
         if (x > 10 || y > 10) {
           x/y > 1 ? slideX = true : slideY = true; 
           if (slideY) return;
@@ -85,47 +85,40 @@ $(function() {
         clearTimeout(window.autoSTOId);
         e.preventDefault();
         var distance = move.x - start.x;
-        $total.css('transform', 'translateX(' + (curDistance + distance) + 'px)');
+        $total.css('transform', 'translateX(' + (currentX + distance) + 'px)');
       }
     }).on('touchend touchcancel', function(e) {
       if (slideX) {
         var distance = e.originalEvent.changedTouches[0].clientX - start.x;
-        // 滑动距离超过 1/4 ，则滑动成功，不超过则恢复位置
         if (Math.abs(distance) > eachWidth / 4) {
-          // 向右滑且不是第一页
-          if (distance > 0 && curDistance < 0) {
-            curDistance += eachWidth;
-          }
-          // 向左滑
-          if (distance < 0) {
-            curDistance -= eachWidth;
-          }
+          // 滑动距离超过 1/4 ，则滑动成功
+          distance > 0 ? currentX += eachWidth : currentX -= eachWidth;
         }
-        $total.addClass('manual').css('transform', 'translateX(' + curDistance + 'px)');
+        $total.addClass('manual').css('transform', 'translateX(' + currentX + 'px)');
       }
     });
     
   fullSlide();
   function fullSlide() {
     window.autoSTOId = setTimeout(function() {
-      curDistance -= eachWidth;
-      $total.addClass('auto').css('transform', 'translateX(' + curDistance + 'px)');
+      currentX -= eachWidth;
+      $total.addClass('auto').css('transform', 'translateX(' + currentX + 'px)');
     }, 4000);
   }
   
   $total.on('webkitTransitionEnd', function(){
     $total.removeClass('auto manual');
     var count = $('#total>a').length;
-    if (curDistance <= ((count - 1) * (-eachWidth))) {
+    if (currentX <= ((count - 1) * (-eachWidth))) {
       // 滑到最后一张
-      curDistance = -eachWidth;
-      $total.css('transform', 'translateX(' + curDistance + 'px)');
-    }else if (curDistance > (-eachWidth)) {
+      currentX = -eachWidth;
+      $total.css('transform', 'translateX(' + currentX + 'px)');
+    }else if (currentX > (-eachWidth)) {
       // 滑到 -1 张
-      curDistance = (count - 2) * (-eachWidth);
-      $total.css('transform', 'translateX(' + curDistance + 'px)');
+      currentX = (count - 2) * (-eachWidth);
+      $total.css('transform', 'translateX(' + currentX + 'px)');
     }
-    var index = Math.ceil(-curDistance/eachWidth) - 1;
+    var index = Math.ceil(-currentX/eachWidth) - 1;
     $('#dot>b').removeClass('in').eq(index).addClass('in');
     fullSlide();
   })
