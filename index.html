@@ -8,7 +8,7 @@
   <style>
   *{margin: 0; padding: 0;}
   .slide{overflow: hidden; position: relative;}
-  .total{width: 10000px; font-size: 0;}
+  .total{width: 10000px; font-size: 0; transform: translateX(-7.5rem);}
   .total.auto{transition: all 0.5s ease-out;}
   .total.manual{transition: all 0.2s ease-out;}
   .total>a{}
@@ -25,7 +25,7 @@
       <a href="img/2.jpg"><img src="img/2.jpg"></a>
       <a href="img/3.jpg"><img src="img/3.jpg"></a>
     </div>
-    <div class="dot" id="dot"><b class="in"></b><b></b><b></b></div>
+    <div class="dot" id="dot"></div>
   </div>
   <div class="text">
     <p>a</p>
@@ -41,18 +41,25 @@
 </body>
 <script src="js/jquery-3.2.1.min.js"></script>
 <script>
+(function init(){
+  var dot = '';
+  for (var i = 0; i < $('#total>a').length; i++) {
+    dot += '<b></b>';
+  }
+  $('#dot').html(dot).children().first().addClass('in');
+  var firstPic = $('#total>a:first').clone();
+  var lastPic = $('#total>a:last').clone();
+  $('#total').append(firstPic).prepend(lastPic);
+})();
 $(function() {
-  $('#total').append($('#total>a:first').clone());
   var $slide = $('#slide'),
       $total = $('#total'),
-      eachWidth = $('#total>a:first>img').width();
-      index = 0,
-      lastIndex = $('#total>a:last').index(),
+      eachWidth = $('#total>a:first>img').width(),
       slideY = false,
       slideX = false,
       start = {x: 0, y: 0},
       move = {x: 0, y: 0},
-      curDistance = 0;
+      curDistance = $total.css('transform').split(',')[4];
       ;
   $slide
     .on('touchstart', function(e) {
@@ -80,7 +87,7 @@ $(function() {
         var distance = move.x - start.x;
         $total.css('transform', 'translateX(' + (curDistance + distance) + 'px)');
       }
-    }).on('touchend', function(e) {
+    }).on('touchend touchcancel', function(e) {
       if (slideX) {
         var distance = e.originalEvent.changedTouches[0].clientX - start.x;
         // 滑动距离超过 1/4 ，则滑动成功，不超过则恢复位置
@@ -98,23 +105,29 @@ $(function() {
       }
     });
     
+  fullSlide();
   function fullSlide() {
-    curDistance -= eachWidth;
-    $total.addClass('auto').css('transform', 'translateX(' + curDistance + 'px)');
+    window.autoSTOId = setTimeout(function() {
+      curDistance -= eachWidth;
+      $total.addClass('auto').css('transform', 'translateX(' + curDistance + 'px)');
+    }, 4000);
   }
-  window.autoSTOId = setTimeout(function() {
-    fullSlide();
-  }, 4000);
+  
   $total.on('webkitTransitionEnd', function(){
     $total.removeClass('auto manual');
-    if (curDistance <= ((lastIndex - index) * (-eachWidth))) {
-      curDistance = 0;
+    var count = $('#total>a').length;
+    if (curDistance <= ((count - 1) * (-eachWidth))) {
+      // 滑到最后一张
+      curDistance = -eachWidth;
+      $total.css('transform', 'translateX(' + curDistance + 'px)');
+    }else if (curDistance > (-eachWidth)) {
+      // 滑到 -1 张
+      curDistance = (count - 2) * (-eachWidth);
       $total.css('transform', 'translateX(' + curDistance + 'px)');
     }
-    $('#dot>b').removeClass('in').eq(Math.ceil(-curDistance/eachWidth)).addClass('in');
-    window.autoSTOId = setTimeout(function() {
-      fullSlide();
-    }, 4000);
+    var index = Math.ceil(-curDistance/eachWidth) - 1;
+    $('#dot>b').removeClass('in').eq(index).addClass('in');
+    fullSlide();
   })
 });
 </script>
